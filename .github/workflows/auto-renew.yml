@@ -56,6 +56,8 @@ jobs:
         IMAP_USER: ${{ secrets.IMAP_USER }}    
         IMAP_SERVER: ${{ secrets.IMAP_SERVER }}
         CLOUD_MAIL: ${{ secrets.CLOUD_MAIL }}
+        PYTHONIOENCODING: utf-8
+        LANG: en_US.UTF-8
         
         # 以下变量由系统和脚本自动处理：
         # - GITHUB_ACTIONS: GitHub自动设置为"true"
