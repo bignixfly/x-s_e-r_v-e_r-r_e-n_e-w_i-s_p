@@ -1,4 +1,4 @@
-name: XServer GAME Auto Renew
+name: XServ Auto Renew
 
 on:
   schedule:
