@@ -433,7 +433,16 @@ class XServerAutoLogin:
 
             # 使用 UTF-8 编码进行搜索，将搜索条件作为单独的参数传递
             # *search_args 将元组解包为单独的字符串参数，避免了 imaplib 内部的 ASCII 编码错误
-            status, messages = mail.search("UTF-8", *search_args)
+            # status, messages = mail.search("UTF-8", *search_args) 此代码不行
+            try:
+                # 优先使用 UTF-8 搜索
+                criteria = f'(FROM "{self.xserver_sender}" SUBJECT "{self.xserver_subject}")'
+                status, messages = mail.uid('SEARCH', 'CHARSET', 'UTF-8', criteria)
+            except Exception as e:
+                print(f"⚠️ UTF-8 搜索失败 ({e})，尝试使用 ASCII 降级搜索")
+                status, messages = mail.uid('SEARCH', None, f'FROM "{self.xserver_sender}"')
+
+            
             
             if status != "OK":
                 print("❌ 搜索邮件失败")
