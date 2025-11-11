@@ -50,20 +50,12 @@ IMAP_USER = os.getenv("IMAP_USER", "smileh81317@smileh81317.serv00.net")
 # 您的 serv00.com 邮箱密码 (!!! 必须设置 !!!)
 IMAP_PASSWORD = os.getenv("IMAP_PASSWORD")
 
-# --- 新增：邮件过滤配置 ---
+# --- 新增：邮件过滤配置 (已根据您的日志更新默认值) ---
 # XServer 发送验证码的 *发件人* 地址 (请确认是否准确)
-#XSERVER_SENDER = os.getenv("XSERVER_SENDER", "info@xserver.ne.jp")
 XSERVER_SENDER = os.getenv("XSERVER_SENDER", "support@xserver.ne.jp")
 # XServer 验证码邮件的 *主题* (请确认是否准确)
-#XSERVER_SUBJECT = os.getenv("XSERVER_SUBJECT", "【Xserver】認証コードのお知らせ")
 XSERVER_SUBJECT = os.getenv("XSERVER_SUBJECT", "【XServerアカウント】ログイン用認証コードのお知らせ")
 # -----------------------------------------------------------------
-
-
-# =====================================================================
-#                 Cloudmail配置加载模块 (已移除)
-# =====================================================================
-# 原有的 load_cloud_mail_config() 函数及其相关配置已被删除
 
 
 # =====================================================================
@@ -392,10 +384,6 @@ class XServerAutoLogin:
             await self.take_screenshot("verification_input_failed")
             return False
 
-    # --- (旧) Cloudmail API 函数 (已删除) ---
-    # get_verification_code_from_cloudmail, _get_mail_api_token, 
-    # _get_mail_list, _save_mail_to_json, _extract_code_from_json
-    # 已全部移除
     
     # --- (保留) 验证码提取函数 ---
     def _extract_verification_code(self, mail_content: str):
@@ -419,7 +407,7 @@ class XServerAutoLogin:
         
         return None
 
-    # --- (新增) IMAP 验证码获取函数 ---
+    # --- (新增/已修复) IMAP 验证码获取函数 ---
     async def get_verification_code_from_imap(self):
         """
         (新函数) 通过 IMAP 登录 serv00.com 邮箱并获取验证码
@@ -438,14 +426,14 @@ class XServerAutoLogin:
             mail.select("inbox")
             print("📬 已进入收件箱")
 
-            # 构建搜索条件
-            # 注意: IMAP 搜索对于日文字符可能不稳定，我们结合发件人来提高准确性
-            # (注意: IMAP 搜索主题时不需要编码)
-            search_criteria = f'(FROM "{self.xserver_sender}" SUBJECT "{self.xserver_subject}")'
-            print(f"🔍 正在搜索邮件 (条件: {search_criteria})")
+            # 构建搜索条件 - 修复 UnicodeEncodeError 的关键
+            # IMAP 搜索对于非 ASCII 字符必须将条件作为单独的参数传递
+            search_args = ('FROM', self.xserver_sender, 'SUBJECT', self.xserver_subject)
+            print(f"🔍 正在搜索邮件 (条件: {' '.join(search_args)})")
 
-            # 使用 UTF-8 编码进行搜索
-            status, messages = mail.search("UTF-8", search_criteria)
+            # 使用 UTF-8 编码进行搜索，将搜索条件作为单独的参数传递
+            # *search_args 将元组解包为单独的字符串参数，避免了 imaplib 内部的 ASCII 编码错误
+            status, messages = mail.search("UTF-8", *search_args)
             
             if status != "OK":
                 print("❌ 搜索邮件失败")
@@ -894,8 +882,4 @@ async def main():
     await login_instance.run()
 
 if __name__ == "__main__":
-    # 确保 Playwright 浏览器已安装
-    # (在 GitHub Actions 中，这通常在 workflow 文件中完成)
-    # os.system("playwright install chromium")
-    
     asyncio.run(main())
