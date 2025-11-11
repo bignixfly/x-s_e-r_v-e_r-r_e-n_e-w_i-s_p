@@ -422,7 +422,7 @@ class XServerAutoLogin:
             mail.select("inbox")
             print("📬 已进入收件箱")
     
-            # 只用 FROM 搜索，避免日文编码错误
+            # 避免日文编码错误：只用 FROM 搜索
             status, messages = mail.search(None, 'FROM', f'"{self.xserver_sender}"')
             if status != "OK":
                 print("❌ 搜索邮件失败")
@@ -437,6 +437,16 @@ class XServerAutoLogin:
     
             print(f"✅ 找到 {len(mail_ids)} 封邮件，开始匹配主题...")
     
+            def decode_subject(raw_subject):
+                decoded_parts = decode_header(raw_subject)
+                subject = ""
+                for part, enc in decoded_parts:
+                    if isinstance(part, bytes):
+                        subject += part.decode(enc or "utf-8", errors="ignore")
+                    else:
+                        subject += part
+                return subject.strip()
+    
             # 从最新开始遍历
             for mail_id in reversed(mail_ids):
                 status, data = mail.fetch(mail_id, "(RFC822)")
@@ -444,15 +454,14 @@ class XServerAutoLogin:
                     continue
     
                 msg = email.message_from_bytes(data[0][1])
-                subject = msg.get("Subject", "")
-                decoded_subject, encoding = decode_header(subject)[0]
-                if isinstance(decoded_subject, bytes):
-                    subject = decoded_subject.decode(encoding or "utf-8", errors="ignore")
+                raw_subject = msg.get("Subject", "")
+                subject = decode_subject(raw_subject)
     
-                if subject.strip() != self.xserver_subject.strip():
+                print(f"📧 收到邮件主题: {subject}")
+                if self.xserver_subject.strip() not in subject:
                     continue  # 跳过不匹配的邮件
     
-                print(f"📧 匹配成功的邮件主题: {subject}")
+                print(f"✅ 匹配成功的邮件主题: {subject}")
     
                 # 提取正文
                 mail_content = ""
