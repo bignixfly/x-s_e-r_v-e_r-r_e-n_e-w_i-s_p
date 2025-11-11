@@ -52,6 +52,9 @@ jobs:
         # XServer 登录凭据
         XSERVER_EMAIL: ${{ secrets.XSERVER_EMAIL }}
         XSERVER_PASSWORD: ${{ secrets.XSERVER_PASSWORD }}
+        IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
+        IMAP_USER: ${{ secrets.IMAP_USER }}    
+        IMAP_SERVER: ${{ secrets.IMAP_SERVER }}
         CLOUD_MAIL: ${{ secrets.CLOUD_MAIL }}
         
         # 以下变量由系统和脚本自动处理：
