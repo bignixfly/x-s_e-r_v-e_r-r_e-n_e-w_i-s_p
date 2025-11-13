@@ -2,7 +2,7 @@ name: XServ Auto Renew
 
 on:
   schedule:
-    - cron: "28 */22 * * *"  # 每 22 小时的第 28 分钟执行
+    - cron: "46 1,13 * * *"    #早晚9点46分各来一次
   workflow_dispatch:  # 允许手动触发
 
 jobs:
